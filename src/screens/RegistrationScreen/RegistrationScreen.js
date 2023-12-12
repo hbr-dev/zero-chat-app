@@ -2,7 +2,9 @@ import React, { useState } from 'react'
 import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import styles from './styles';
-import { firebase } from '../../firebase/config'
+import firebase from '../../firebase/config'
+import Loading from '../LoadScreen/LoadScreen';
+import { updateDoc, serverTimestamp } from "firebase/firestore";
 
 
 
@@ -13,16 +15,22 @@ export default function RegistrationScreen({navigation}) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
+    const [loading, setLoading] = useState(false)
 
     const onFooterLinkPress = () => {
         navigation.navigate('Login')
     }
 
     const onRegisterPress = () => {
+        setLoading(true);
+
+        const timestamp = serverTimestamp();
+
         if (password !== confirmPassword) {
             alert("Passwords don't match.")
             return
         }
+
         firebase
             .auth()
             .createUserWithEmailAndPassword(email, password)
@@ -31,21 +39,27 @@ export default function RegistrationScreen({navigation}) {
                 const data = {
                     id: uid,
                     email,
+                    phoneNBR: null,
                     fullName,
+                    imageURL: null,
+                    createdAt: timestamp,
+                    modifiedAt: timestamp,
                 };
                 const usersRef = firebase.firestore().collection('users')
                 usersRef
                     .doc(uid)
                     .set(data)
                     .then(() => {
-                        navigation.navigate('Home', {user: data});
+                        navigation.navigate('Home', {user: data})
                     })
                     .catch((error) => {
                         alert(error)
                     });
+                setLoading(false);
             })
             .catch((error) => {
-                alert(error)
+                setLoading(false);
+                alert(error);
         });
     }
 
@@ -105,6 +119,7 @@ export default function RegistrationScreen({navigation}) {
                     <Text style={styles.footerText}>Already got an account? <Text onPress={onFooterLinkPress} style={styles.footerLink}>Log in</Text></Text>
                 </View>
             </KeyboardAwareScrollView>
+            {loading && <Loading loadingMSG="Sign-up in progress..." />}
         </View>
     )
 }

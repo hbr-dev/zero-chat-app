@@ -1,23 +1,25 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { FlatList, Keyboard, Text, TextInput, TouchableOpacity, View } from 'react-native'
-import styles from './styles';
-import { firebase } from '../../firebase/config'
+import styles from './styles'
+import firebase from '../../firebase/config'
+import LoadScreen from '../LoadScreen/LoadScreen';
 
 
 
 
-
-export default function HomeScreen(props) {
+export default function EntitiesScreens({ route }) {
 
     const [entityText, setEntityText] = useState('')
     const [entities, setEntities] = useState([])
+    const [loading, setLoading] = useState(false)
 
-    const entityRef = firebase.firestore().collection('entities');
-    const userID = props.extraData.id;
+    const entityRef = firebase.firestore().collection('entities')
+    const userID = route.params.userData.id
 
     useEffect(() => {
+        setLoading(true)
         entityRef
-            .where("authorID", "==", userID)
+            .where("isAvailable", "==", true)
             .orderBy('createdAt', 'desc')
             .onSnapshot(
                 querySnapshot => {
@@ -33,23 +35,29 @@ export default function HomeScreen(props) {
                     console.log(error)
                 }
             )
+        setLoading(false)
     }, [])
 
     const onAddButtonPress = () => {
         if (entityText && entityText.length > 0) {
-            const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+            setLoading(true);
+            const timestamp = new Date()
             const data = {
                 text: entityText,
+                media: null,
+                isAvailable: true,
                 authorID: userID,
                 createdAt: timestamp,
             };
             entityRef
                 .add(data)
                 .then(_doc => {
+                    setLoading(false)
                     setEntityText('')
                     Keyboard.dismiss()
                 })
                 .catch((error) => {
+                    setLoading(false)
                     alert(error)
                 });
         }
@@ -91,6 +99,7 @@ export default function HomeScreen(props) {
                     />
                 </View>
             )}
+            {loading && <LoadScreen loadingMSG="Please wait..."/>}
         </View>
-    );
+    )
 }

@@ -2,21 +2,20 @@ import React, { useState } from 'react'
 import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import styles from './styles';
-import { firebase } from '../../firebase/config'
-
-
-
-
+import firebase from '../../firebase/config'
+import Loading from '../LoadScreen/LoadScreen';
 
 export default function LoginScreen({navigation}) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [loading, setLoading] = useState(false)
 
     const onFooterLinkPress = () => {
         navigation.navigate('Registration')
     }
 
     const onLoginPress = () => {
+        setLoading(true);
         firebase
             .auth()
             .signInWithEmailAndPassword(email, password)
@@ -28,18 +27,23 @@ export default function LoginScreen({navigation}) {
                     .get()
                     .then(firestoreDocument => {
                         if (!firestoreDocument.exists) {
-                            alert("User does not exist anymore.")
+                            setLoading(false);
+                            alert("User does not exist anymore.");
                             return;
                         }
                         const user = firestoreDocument.data()
-                        navigation.navigate('Home', {user})
+                        navigation.navigate('Home', {user: user})
                     })
                     .catch(error => {
+                        setLoading(false);
                         alert(error)
+                        return;
                     });
+                setLoading(false);
             })
             .catch(error => {
-                alert(error)
+                setLoading(false);
+                alert(error);
             })
     }
 
@@ -80,6 +84,7 @@ export default function LoginScreen({navigation}) {
                     <Text style={styles.footerText}>Don't have an account? <Text onPress={onFooterLinkPress} style={styles.footerLink}>Sign up</Text></Text>
                 </View>
             </KeyboardAwareScrollView>
+            {loading && <Loading loadingMSG="Sign-in in progress..."/>}
         </View>
     )
 }
