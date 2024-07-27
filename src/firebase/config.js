@@ -5,7 +5,7 @@ import "firebase/compat/database";
 import "firebase/compat/storage";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyAFdbK7esnhlkjAqGArSnXS8RPtOVobLpM",
+    apiKey: "",
     authDomain: "tp-mobile-whats.firebaseapp.com",
     projectId: "tp-mobile-whats",
     storageBucket: "tp-mobile-whats.appspot.com",
